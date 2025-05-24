@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Market Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background: #f4f4f4; }
+    table { border-collapse: collapse; width: 100%; background: white; }
+    th, td { padding: 10px; border: 1px solid #ccc; text-align: center; }
+    th { background: #0074D9; color: white; }
+    h1 { color: #333; }
+  </style>
+</head>
+<body>
+  <h1>Daily Market Report</h1>
+  <table id="data-table">
+    <thead>
+      <tr>
+        <th>Symbol</th>
+        <th>CMP</th>
+        <th>CCI 2</th>
+        <th>CCI 4</th>
+        <th>CCI 10</th>
+        <th>CCI 30</th>
+        <th>CCI 60</th>
+        <th>CCI 90</th>
+        <th>CCI 120</th>
+        <th>CCI 150</th>
+        <th>ST 10.2</th>
+        <th>Short Breadth</th>
+        <th>Long Breadth</th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+
+  <script>
+    fetch("data.json")
+      .then(response => response.json())
+      .then(data => {
+        const tbody = document.querySelector("#data-table tbody");
+        data.forEach(row => {
+          const tr = document.createElement("tr");
+          Object.values(row).forEach(value => {
+            const td = document.createElement("td");
+            td.textContent = value;
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+      });
+  </script>
+</body>
+</html>
