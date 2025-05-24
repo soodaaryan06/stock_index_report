@@ -13,15 +13,18 @@
       background: #f5f7fa;
     }
     .sidebar {
+      position: relative;           /* for footer positioning */
       width: 220px;
       background: #fff;
       border-right: 1px solid #ddd;
       padding-top: 20px;
+      padding-bottom: 60px;         /* space for footer */
     }
     .sidebar h2 {
       text-align: center;
       color: #0074D9;
       font-size: 18px;
+      margin: 0 0 20px;
     }
     .sidebar a {
       display: block;
@@ -30,10 +33,19 @@
       color: #333;
       border-left: 4px solid transparent;
     }
-    .sidebar a:hover, .sidebar a.active {
+    .sidebar a:hover,
+    .sidebar a.active {
       background: #e0f2ff;
       border-left: 4px solid #0074D9;
       color: #0074D9;
+    }
+    .sidebar-footer {
+      position: absolute;
+      bottom: 10px;
+      width: 100%;
+      text-align: center;
+      font-size: 12px;
+      color: #555;
     }
     .main {
       flex: 1;
@@ -79,7 +91,12 @@
     <h2>Market View</h2>
     <a class="tablink active" onclick="openTab(event, 'breadth')">Index Breadth</a>
     <a class="tablink" onclick="openTab(event, 'constituents')">Index Constituents Data</a>
+
+    <div class="sidebar-footer">
+      Developed with ❤️, by Aaryan
+    </div>
   </div>
+
   <div class="main">
     <div id="breadth" class="tabcontent" style="display: block;">
       <h1>Index Breadth</h1>
@@ -91,6 +108,7 @@
       <div id="constituentsTable"></div>
     </div>
   </div>
+
   <script>
     function openTab(evt, tabId) {
       document.querySelectorAll('.tabcontent').forEach(tab => tab.style.display = 'none');
@@ -107,18 +125,18 @@
 
       if (containerId === "breadthTable") {
         const masterHeaders = ["Index", "Short Term Breadth", "", "", "", "", "Long Term Breadth", "", "", "", ""];
-        const subHeaders = ["", "Positives", "Negatives", "Current Score", "Previous Score", "Intensity of Change",
-                            "Positives", "Negatives", "Current Score", "Previous Score", "Intensity of Change"];
+        const subHeaders   = ["", "Positives", "Negatives", "Current Score", "Previous Score", "Intensity of Change",
+                              "Positives", "Negatives", "Current Score", "Previous Score", "Intensity of Change"];
 
         const masterRow = document.createElement("tr");
         masterHeaders.forEach((text, i) => {
           const th = document.createElement("th");
           if (i === 1 || i === 6) {
             th.colSpan = 5;
-            th.innerHTML = text;
+            th.textContent = text;
           } else if (i === 0) {
             th.rowSpan = 2;
-            th.innerHTML = text;
+            th.textContent = text;
           } else {
             return;
           }
@@ -129,46 +147,46 @@
         subHeaders.forEach((text, i) => {
           if (i === 0) return;
           const th = document.createElement("th");
-          th.innerHTML = text;
+          th.textContent = text;
           subRow.appendChild(th);
         });
 
         thead.appendChild(masterRow);
         thead.appendChild(subRow);
 
-        Object.entries(data).forEach(([index, metrics]) => {
-          const stColor = metrics.short_term_breadth.intensity_of_change > 0 ? 'green' : 'red';
-          const ltColor = metrics.long_term_breadth.intensity_of_change > 0 ? 'green' : 'red';
+        Object.entries(data).forEach(([index, m]) => {
+          const stBg = m.short_term_breadth.intensity_of_change > 0 ? '#2ecc71' : '#e74c3c';
+          const ltBg = m.long_term_breadth.intensity_of_change   > 0 ? '#2ecc71' : '#e74c3c';
 
           const tr = document.createElement("tr");
           tr.innerHTML = `
             <td>${index}</td>
-            <td>${metrics.short_term_breadth.positives}</td>
-            <td>${metrics.short_term_breadth.negatives}</td>
-            <td>${metrics.short_term_breadth.current_score}</td>
-            <td>${metrics.short_term_breadth.prev_score}</td>
-            <td style="color:${stColor}; font-weight:bold;">${metrics.short_term_breadth.intensity_of_change}</td>
-            <td>${metrics.long_term_breadth.positives}</td>
-            <td>${metrics.long_term_breadth.negatives}</td>
-            <td>${metrics.long_term_breadth.current_score}</td>
-            <td>${metrics.long_term_breadth.prev_score}</td>
-            <td style="color:${ltColor}; font-weight:bold;">${metrics.long_term_breadth.intensity_of_change}</td>
+            <td>${m.short_term_breadth.positives}</td>
+            <td>${m.short_term_breadth.negatives}</td>
+            <td>${m.short_term_breadth.current_score}</td>
+            <td>${m.short_term_breadth.prev_score}</td>
+            <td style="background-color:${stBg}; color:#fff; font-weight:600;">${m.short_term_breadth.intensity_of_change}</td>
+            <td>${m.long_term_breadth.positives}</td>
+            <td>${m.long_term_breadth.negatives}</td>
+            <td>${m.long_term_breadth.current_score}</td>
+            <td>${m.long_term_breadth.prev_score}</td>
+            <td style="background-color:${ltBg}; color:#fff; font-weight:600;">${m.long_term_breadth.intensity_of_change}</td>
           `;
           tbody.appendChild(tr);
         });
+
       } else {
         const keys = Object.keys(data);
         const first = flattenObject(data[keys[0]]);
 
-        const theadRow = document.createElement("tr");
-        theadRow.innerHTML = `<th>Index</th>` + Object.keys(first).map(k => `<th>${k}</th>`).join("");
-        thead.appendChild(theadRow);
+        const headRow = document.createElement("tr");
+        headRow.innerHTML = `<th>Index</th>` + Object.keys(first).map(k => `<th>${k}</th>`).join("");
+        thead.appendChild(headRow);
 
         Object.entries(data).forEach(([index, metrics]) => {
           const flat = flattenObject(metrics);
-          const row = `<td>${index}</td>` + Object.values(flat).map(v => `<td>${v}</td>`).join("");
           const tr = document.createElement("tr");
-          tr.innerHTML = row;
+          tr.innerHTML = `<td>${index}</td>` + Object.values(flat).map(v => `<td>${v}</td>`).join("");
           tbody.appendChild(tr);
         });
       }
@@ -180,17 +198,17 @@
     }
 
     function flattenObject(obj) {
-      const result = {};
-      for (const key in obj) {
-        if (typeof obj[key] === 'object' && obj[key] !== null) {
-          for (const sub in obj[key]) {
-            result[`${key}_${sub}`] = obj[key][sub];
+      const res = {};
+      for (let k in obj) {
+        if (typeof obj[k] === 'object' && obj[k] !== null) {
+          for (let sub in obj[k]) {
+            res[`${k}_${sub}`] = obj[k][sub];
           }
         } else {
-          result[key] = obj[key];
+          res[k] = obj[k];
         }
       }
-      return result;
+      return res;
     }
 
     fetch("public_json/sectoral_breadth_summary.json")
@@ -202,53 +220,49 @@
       .then(data => {
         const tabsContainer = document.getElementById("constituentsTabs");
         const tableContainer = document.getElementById("constituentsTable");
-
         const indexNames = Object.keys(data);
 
-        indexNames.forEach((indexName, i) => {
-          const tab = document.createElement("button");
-          tab.textContent = indexName;
-          tab.style.padding = "8px 16px";
-          tab.style.border = "1px solid #ccc";
-          tab.style.borderRadius = "6px";
-          tab.style.cursor = "pointer";
-          tab.style.background = i === 0 ? "#0074D9" : "#f0f0f0";
-          tab.style.color = i === 0 ? "#fff" : "#333";
-
-          tab.onclick = () => {
-            document.querySelectorAll("#constituentsTabs button").forEach(btn => {
-              btn.style.background = "#f0f0f0";
-              btn.style.color = "#333";
+        indexNames.forEach((name, i) => {
+          const btn = document.createElement("button");
+          btn.textContent = name;
+          btn.style.padding = "8px 16px";
+          btn.style.border = "1px solid #ccc";
+          btn.style.borderRadius = "6px";
+          btn.style.cursor = "pointer";
+          btn.style.background = i === 0 ? "#0074D9" : "#f0f0f0";
+          btn.style.color = i === 0 ? "#fff" : "#333";
+          btn.onclick = () => {
+            tabsContainer.querySelectorAll("button").forEach(b => {
+              b.style.background = "#f0f0f0";
+              b.style.color = "#333";
             });
-            tab.style.background = "#0074D9";
-            tab.style.color = "#fff";
-            renderConstituentTable(data[indexName], indexName);
+            btn.style.background = "#0074D9";
+            btn.style.color = "#fff";
+            renderConstituentTable(data[name]);
           };
-
-          tabsContainer.appendChild(tab);
+          tabsContainer.appendChild(btn);
         });
 
-        function renderConstituentTable(dataObj, indexName) {
+        function renderConstituentTable(obj) {
           const table = document.createElement("table");
           const thead = document.createElement("thead");
           const tbody = document.createElement("tbody");
-
-          const first = Object.values(dataObj)[0];
+          const first = Object.values(obj)[0];
           const headers = ["Company Name", ...Object.keys(first)];
 
-          const headRow = document.createElement("tr");
+          const hr = document.createElement("tr");
           headers.forEach(h => {
             const th = document.createElement("th");
             th.textContent = h;
-            headRow.appendChild(th);
+            hr.appendChild(th);
           });
-          thead.appendChild(headRow);
+          thead.appendChild(hr);
 
-          Object.entries(dataObj).forEach(([company, values]) => {
-            const row = document.createElement("tr");
-            row.innerHTML = `<td style='max-width:140px;word-wrap:break-word;'>${company}</td>` +
-              Object.values(values).map(v => `<td>${v}</td>`).join("");
-            tbody.appendChild(row);
+          Object.entries(obj).forEach(([comp, vals]) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `<td style='max-width:140px;word-wrap:break-word;'>${comp}</td>` +
+              Object.values(vals).map(v => `<td>${v}</td>`).join("");
+            tbody.appendChild(tr);
           });
 
           table.appendChild(thead);
@@ -257,7 +271,7 @@
           tableContainer.appendChild(table);
         }
 
-        renderConstituentTable(data[indexNames[0]], indexNames[0]);
+        renderConstituentTable(data[indexNames[0]]);
       });
   </script>
 </body>
