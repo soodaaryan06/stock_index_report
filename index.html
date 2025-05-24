@@ -3,53 +3,196 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Daily Market Dashboard</title>
+  <title>Market Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px; background: #f4f4f4; }
-    table { border-collapse: collapse; width: 100%; background: white; }
-    th, td { padding: 10px; border: 1px solid #ccc; text-align: center; }
-    th { background: #0074D9; color: white; }
-    h1 { color: #333; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f7fa;
+      display: flex;
+      height: 100vh;
+      color: #333;
+    }
+    .sidebar {
+      width: 240px;
+      background: #ffffff;
+      border-right: 1px solid #e0e0e0;
+      padding-top: 20px;
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+    }
+    .sidebar h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 20px;
+      color: #0074D9;
+    }
+    .sidebar a {
+      display: block;
+      padding: 14px 24px;
+      color: #333;
+      text-decoration: none;
+      border-left: 4px solid transparent;
+      transition: background 0.3s, border-left 0.3s;
+    }
+    .sidebar a:hover,
+    .sidebar a.active {
+      background: #e6f7ff;
+      border-left: 4px solid #0074D9;
+      color: #0074D9;
+    }
+    .content {
+      flex: 1;
+      padding: 40px;
+      overflow-y: auto;
+    }
+    h1 {
+      font-size: 26px;
+      margin-bottom: 20px;
+      color: #0074D9;
+    }
+    .index-tabs {
+      display: flex;
+      overflow-x: auto;
+      gap: 12px;
+      margin-bottom: 30px;
+      padding: 10px;
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
+      scrollbar-width: thin;
+    }
+    .index-tabs::-webkit-scrollbar {
+      height: 6px;
+    }
+    .index-tabs::-webkit-scrollbar-thumb {
+      background-color: #ccc;
+      border-radius: 10px;
+    }
+    .index-tab {
+      padding: 10px 18px;
+      background: #f0f0f0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease-in-out;
+      font-size: 14px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .index-tab:hover {
+      background: #e0e0e0;
+    }
+    .index-tab.active {
+      background: #0074D9;
+      color: white;
+      border-color: #0074D9;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+      margin-bottom: 30px;
+    }
+    th, td {
+      border: 1px solid #e0e0e0;
+      padding: 12px;
+      text-align: center;
+      font-size: 13px;
+    }
+    th {
+      background: #0074D9;
+      color: white;
+      font-weight: 600;
+    }
+    tr:nth-child(even) td {
+      background: #f9f9f9;
+    }
   </style>
 </head>
 <body>
-  <h1>Daily Market Report</h1>
-  <table id="data-table">
-    <thead>
-      <tr>
-        <th>Symbol</th>
-        <th>CMP</th>
-        <th>CCI 2</th>
-        <th>CCI 4</th>
-        <th>CCI 10</th>
-        <th>CCI 30</th>
-        <th>CCI 60</th>
-        <th>CCI 90</th>
-        <th>CCI 120</th>
-        <th>CCI 150</th>
-        <th>ST 10.2</th>
-        <th>Short Breadth</th>
-        <th>Long Breadth</th>
-      </tr>
-    </thead>
-    <tbody>
-    </tbody>
-  </table>
-
+  <div class="sidebar">
+    <h2>Market Dashboard</h2>
+    <a class="tablink active" onclick="showTab('sectoral')">Sectoral Data</a>
+  </div>
+  <div class="content">
+    <div id="sectoral" class="tabcontent">
+      <h1>Sectoral Data</h1>
+      <div id="index-tabs" class="index-tabs"></div>
+      <div id="sectoral-container"></div>
+    </div>
+  </div>
   <script>
-    fetch("data.json")
-      .then(response => response.json())
+    function showTab(tabId) {
+      document.querySelectorAll('.tabcontent').forEach(div => div.style.display = 'none');
+      document.querySelectorAll('.tablink').forEach(link => link.classList.remove('active'));
+      document.getElementById(tabId).style.display = 'block';
+      event.target.classList.add('active');
+    }
+
+    fetch('public_json/sectoral_data.json')
+      .then(res => res.json())
       .then(data => {
-        const tbody = document.querySelector("#data-table tbody");
-        data.forEach(row => {
-          const tr = document.createElement("tr");
-          Object.values(row).forEach(value => {
-            const td = document.createElement("td");
-            td.textContent = value;
-            tr.appendChild(td);
-          });
-          tbody.appendChild(tr);
+        const container = document.getElementById('sectoral-container');
+        const tabs = document.getElementById('index-tabs');
+
+        Object.keys(data).forEach((indexName, idx) => {
+          const tab = document.createElement('div');
+          tab.className = 'index-tab' + (idx === 0 ? ' active' : '');
+          tab.textContent = indexName;
+          tab.onclick = () => {
+            document.querySelectorAll('.index-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            renderTable(indexName);
+          };
+          tabs.appendChild(tab);
         });
+
+        function renderTable(indexName) {
+          container.innerHTML = '';
+
+          const isinMap = data[indexName];
+          const section = document.createElement('div');
+
+          const table = document.createElement('table');
+          const thead = document.createElement('thead');
+          const headerRow = document.createElement('tr');
+
+          const headers = ["ISIN", "CCI 2", "CCI 4", "CCI 10", "CCI 30", "CCI 60", "CCI 90", "CCI 120", "CCI 150"];
+          headers.forEach(h => {
+            const th = document.createElement('th');
+            th.textContent = h;
+            headerRow.appendChild(th);
+          });
+          thead.appendChild(headerRow);
+          table.appendChild(thead);
+
+          const tbody = document.createElement('tbody');
+          Object.entries(isinMap).forEach(([isin, cciValues]) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${isin}</td>
+              <td>${cciValues.cci_2}</td>
+              <td>${cciValues.cci_4}</td>
+              <td>${cciValues.cci_10}</td>
+              <td>${cciValues.cci_30}</td>
+              <td>${cciValues.cci_60}</td>
+              <td>${cciValues.cci_90}</td>
+              <td>${cciValues.cci_120}</td>
+              <td>${cciValues.cci_150}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+
+          table.appendChild(tbody);
+          section.appendChild(table);
+          container.appendChild(section);
+        }
+
+        renderTable(Object.keys(data)[0]);
       });
   </script>
 </body>
