@@ -13,12 +13,12 @@
       background: #f5f7fa;
     }
     .sidebar {
-      position: relative;           /* for footer positioning */
+      position: relative;
       width: 220px;
       background: #fff;
       border-right: 1px solid #ddd;
       padding-top: 20px;
-      padding-bottom: 60px;         /* space for footer */
+      padding-bottom: 60px;
     }
     .sidebar h2 {
       text-align: center;
@@ -84,6 +84,40 @@
     tr:nth-child(even) {
       background: #f9f9f9;
     }
+
+    #constituentsTabs, #breadthSubTabs {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 10px 0;
+      margin-bottom: 20px;
+    }
+
+    .constituent-tab,
+    .breadth-subtab {
+      padding: 10px 18px;
+      border: none;
+      border-bottom: 2px solid transparent;
+      background: none;
+      font-size: 14px;
+      cursor: pointer;
+      color: #333;
+      transition: all 0.2s ease;
+    }
+
+    .constituent-tab:hover,
+    .breadth-subtab:hover {
+      color: #0074D9;
+      background: #eaf6ff;
+    }
+
+    .constituent-tab.active,
+    .breadth-subtab.active {
+      color: #0074D9;
+      border-bottom: 2px solid #0074D9;
+      font-weight: bold;
+      background: #fff;
+    }
   </style>
 </head>
 <body>
@@ -91,7 +125,6 @@
     <h2>Market View</h2>
     <a class="tablink active" onclick="openTab(event, 'breadth')">Index Breadth</a>
     <a class="tablink" onclick="openTab(event, 'constituents')">Index Constituents Data</a>
-
     <div class="sidebar-footer">
       Developed with ❤️, by Aaryan
     </div>
@@ -100,11 +133,16 @@
   <div class="main">
     <div id="breadth" class="tabcontent" style="display: block;">
       <h1>Index Breadth</h1>
+      <div id="breadthSubTabs">
+        <button class="breadth-subtab active" onclick="switchBreadthTab(this, 'broad')">Broad Indices</button>
+        <button class="breadth-subtab" onclick="switchBreadthTab(this, 'sectoral')">Sectoral Indices</button>
+      </div>
       <div id="breadthTable"></div>
     </div>
+
     <div id="constituents" class="tabcontent">
       <h1>Index Constituents Data</h1>
-      <div id="constituentsTabs" style="display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; margin-bottom: 20px;"></div>
+      <div id="constituentsTabs"></div>
       <div id="constituentsTable"></div>
     </div>
   </div>
@@ -211,9 +249,21 @@
       return res;
     }
 
+    let breadthData = {};
+
     fetch("public_json/sectoral_breadth_summary.json")
       .then(res => res.json())
-      .then(data => renderTableFromJSON(data, "breadthTable"));
+      .then(data => {
+        breadthData = data;
+        renderTableFromJSON(breadthData["broad_indices"], "breadthTable");
+      });
+
+    function switchBreadthTab(button, type) {
+      document.querySelectorAll(".breadth-subtab").forEach(btn => btn.classList.remove("active"));
+      button.classList.add("active");
+      const subset = type === "broad" ? breadthData["broad_indices"] : breadthData["sectoral_indices"];
+      renderTableFromJSON(subset, "breadthTable");
+    }
 
     fetch("public_json/sectoral_data.json")
       .then(res => res.json())
@@ -225,19 +275,12 @@
         indexNames.forEach((name, i) => {
           const btn = document.createElement("button");
           btn.textContent = name;
-          btn.style.padding = "8px 16px";
-          btn.style.border = "1px solid #ccc";
-          btn.style.borderRadius = "6px";
-          btn.style.cursor = "pointer";
-          btn.style.background = i === 0 ? "#0074D9" : "#f0f0f0";
-          btn.style.color = i === 0 ? "#fff" : "#333";
+          btn.classList.add("constituent-tab");
+          if (i === 0) btn.classList.add("active");
+
           btn.onclick = () => {
-            tabsContainer.querySelectorAll("button").forEach(b => {
-              b.style.background = "#f0f0f0";
-              b.style.color = "#333";
-            });
-            btn.style.background = "#0074D9";
-            btn.style.color = "#fff";
+            tabsContainer.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
             renderConstituentTable(data[name]);
           };
           tabsContainer.appendChild(btn);
